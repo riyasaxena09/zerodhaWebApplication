@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import Hero from '../landindPage/Home/Hero';
 import '@testing-library/jest-dom/jest-globals';
-
+    
 describe('Hero Component', () => {
   test('renders the Hero component with correct content', () => {
     render(<Hero />);

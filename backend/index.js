@@ -18,7 +18,7 @@ const url=process.env.MONGO_URL;
 
 app.use(
   cors({
-    origin: ["http://localhost:3000"],
+    origin: ["http://localhost:3000", "http://localhost:3001"],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   })
@@ -71,9 +71,37 @@ app.get(('/positions'),async(req,res)=>{
     res.send(position);
 });
 
-app.post(('/newOrder'),(req,res)=>{
+app.post(('/newOrder'),async(req,res)=>{
     const {name,qty,price,mode}=req.body;
+    console.log(mode, 'mode');
 
+    if(mode==="SELL"){
+
+        const holdings=await HoldingModel.find({name:name})
+
+        if(holdings.length > 0 && holdings[0].qty >= qty){
+            const newOrder=new orderModel({
+              name,
+              qty,
+              price,
+              mode
+        });
+          await newOrder.save();
+          res.send("Order sell");
+          
+          if(holdings[0].qty == qty){
+            await HoldingModel.findOneAndDelete({name:name});
+          }else{
+            await HoldingModel.findOneAndUpdate({name:name}, {$inc: {qty: -qty}});
+          }
+        }else{
+            console.log("Not enough holdings to sell");
+            // res.send("Not enough holdings to sell");
+        }
+
+    return;
+    }
+    
     const newOrder=new orderModel({
         name,
         qty,
@@ -82,7 +110,6 @@ app.post(('/newOrder'),(req,res)=>{
     });
     newOrder.save();
 
-    console.log(name,qty,price,mode);
     res.send("Order received");
 });
 
